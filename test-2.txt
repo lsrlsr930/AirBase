@@ -1,0 +1,101 @@
+set echo on;
+set LINESIZE 200;
+set PAGESIZE 1000;
+set heading on;
+
+#1
+select fl_flight_no, fl_orig, fl_dest from Flight
+where FL_ORIG in
+(
+select air_code as code from airport
+where AIR_HUB_AIRLINE is null
+);
+
+#2
+select tic_flight_no, count(tic_itinerary_no) as Number_of_Tickets from ticket
+where tic_flight_no in(
+select fl_flight_no from flight
+where fl_orig in (
+select air_code from airport
+where air_location like '%CA'
+) or 
+fl_orig in (
+select air_code from airport
+where air_location like '%CA'
+)
+)
+group by tic_flight_no
+
+#3
+select dep_flight_no, dep_dep_date, eq_equip_type from MIS3376.DEPARTURES inner join 
+(select * from equip_type
+where EQ_EQUIP_TYPE not like 'BOE%'
+) on dep_equip_no=EQ_EQUIP_NO;
+
+#4
+select pil_pilotname,sum( fl_distance)as Miles_Flown from pilots 
+inner join ( departures inner join flight on fl_flight_no= dep_flight_no)
+on pil_pilot_id= dep_pilot_id
+group by pil_pilotname;
+
+#5
+select pas_name from MIS3376.PASSENGER
+where PAS_name not in (
+select res_name from MIS3376.RESERVATION
+);
+
+#6
+select pil_pilotname, count(dep_flight_no) as Number_of_Flights, sum(fl_fare) as Compensation from pilots
+left outer join (
+select * from 
+departures inner join flight on dep_flight_no = fl_flight_no 
+where dep_dep_date between '01-APR-17'  and '30-APR-17'
+) on pil_pilot_id =dep_pilot_id
+group by pil_pilotname
+
+#7
+select pas_name as passenger_Name, tic_flight_no, tic_flight_date, tic_seat, res_name from ticket
+inner join (
+passenger inner join reservation on pas_confirm_no= res_confirm_no
+) on ticket.TIC_ITINERARY_NO= passenger.PAS_ITINERARY_NO
+where res_name= 'Andy Anderson';
+
+#8
+select pas_name, tic_seat as Seat_Number from passenger
+inner join ticket on passenger.PAS_ITINERARY_NO= ticket.TIC_ITINERARY_NO
+where ticket.TIC_FLIGHT_NO=104 and tic_flight_date= '23-JUL-17';
+
+#9
+select fl_orig as Departs_From, fl_dest as Arrives_at, max(fl_fare) as Maximum_Fair from flight
+group by fl_dest, fl_orig
+
+#10
+select fl_flight_no, fl_orig, fl_dest, fl_orig_time as Departure_Time, fl_dest_time as Arrival_Time from flight 
+where FL_ORIG_TIME <> '18-APR-17';
+
+#11
+select tic_flight_no, count(tic_seat) from ticket
+having count(tic_seat)>5
+group by tic_flight_no
+
+#12
+select eq_equip_type, eq_fuel_capacity*eq_miles_per_gal as Maximum_Distance_Flown from MIS3376.EQUIP_TYPE
+
+#13
+select distinct pil_pilotname from pilots
+inner join departures on pil_pilot_id = dep_pilot_id
+where dep_dep_date not between '01-APR-17' and '30-APR-17'
+
+#14
+select pas_name as passenger, res_name as Person_Making_Reserv from passenger inner join reservation on 
+passenger.PAS_CONFIRM_NO= reservation.RES_CONFIRM_NO
+where pas_name= res_name
+
+#15
+select fl_flight_no, fl_orig, fl_dest from flight 
+where fl_flight_no in(
+select res_flight_no from reservation where res_name= 'Ole Olson'
+)
+order by fl_flight_no
+
+

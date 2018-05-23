@@ -1,0 +1,73 @@
+set echo on;
+set LINESIZE 200;
+set PAGESIZE 1000;
+set heading on;
+
+#1
+select * from pilots order by pil_flight_pay, pil_pilotname;
+
+#2
+select pil_pilotname, pil_city, pil_flight_pay from pilots
+where (PIL_CITY IN ('HOUSTON','PHOENIX')AND PIL_FLIGHT_PAY> 1500);
+
+#3
+select pas_name, pas_confirm_no, tic_flight_no, tic_flight_date from passenger inner join ticket on
+pas_itinerary_no=tic_itinerary_no
+where pas_confirm_no!=0
+order by pas_name;
+
+#4
+select eq_equip_no, eq_equip_type, eq_seat_capacity, eq_fuel_capacity, eq_miles_per_gal
+from equip_type
+where EQ_FUEL_CAPACITY>2500 or (EQ_FUEL_CAPACITY<2500 and EQ_MILES_PER_GAL>4);
+
+#5
+select fl_orig, count(fl_flight_no) as Number_of_Orginating_flights from flight
+group by FL_ORIG;
+
+#6
+select concat(fl_orig, fl_dest) as lane, air_location, fl_fare as Maximum_Fare from flight inner join airport
+on air_code= fl_orig
+where fl_fare in (
+select max(fl_fare) from flight group by fl_orig
+) and fl_fare>100
+
+#7
+select * from EQUIP_TYPE where EQ_EQUIP_TYPE like 'BOE%';
+
+#8
+SELECT air_code, air_location, air_elevation from airport
+where AIR_HUB_AIRLINE is null;
+
+#9
+select DISTINCT p1.pil_pilot_id as Pilot_ID from(
+select pilots.PIL_PILOT_ID, departures.DEP_EQUIP_NO + departures.DEP_DEP_DATE as uni
+from pilots inner join departures on pilots.PIL_PILOT_ID=departures.DEP_PILOT_ID) p1 inner join
+(select pilots.PIL_PILOT_ID, departures.DEP_EQUIP_NO + departures.DEP_DEP_DATE as uni
+from pilots inner join departures on pilots.PIL_PILOT_ID=departures.DEP_PILOT_ID) p2 on p1.PIL_PILOT_ID=p2.PIL_PILOT_ID
+where p1.uni!= p2.uni
+order by Pilot_ID;
+
+#10
+select fl_flight_no, fl_orig,fl_dest,fl_fare, fl_distance,fl_fare/FL_DISTANCE as Miles_Flown_Per_Dollar from flight;
+
+#11
+select air_location, count(fl_flight_no) as Number_of_Originating_Flight from airport inner join flight on fl_orig= air_code
+group by airport.AIR_LOCATION;
+
+#12
+select pil_state as ST, max(pil_flight_pay) as Maximum_Pay,min(pil_flight_pay) as Minimum_Pay,avg(pil_flight_pay) as Average_Flight_Pay
+from pilots
+group by pil_state;
+
+#13
+select pil_pilotname, max(departures.DEP_DEP_DATE) as Most_Recent_Departure_Date from pilots inner join departures on pilots.PIL_PILOT_ID= departures.DEP_PILOT_ID
+group by pilots.PIL_PILOTNAME;
+
+#14
+select round((max(PIL_BRTHDATE)-min(PIL_BRTHDATE))/365,2) as Age_Difference from pilots
+
+#15
+select DISTINCT eq_equip_type, eq_fuel_capacity * eq_miles_per_gal as Maximum_Distance_Flown from equip_type
+order by Maximum_Distance_Flown DESC
+

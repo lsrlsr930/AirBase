@@ -1,0 +1,122 @@
+set echo on;
+set LINESIZE 200;
+set PAGESIZE 1000;
+set heading on;
+
+#1
+SELECT States, sum(CT)  as Number_of_Airport from (
+select SUBSTR (air_location,-2,2) as States, count(air_code) as CT from airport
+group by AIR_location
+)
+group by states
+
+#2
+select fl_flight_no, dep_dep_date, fl_meal, air_location from airport inner join(
+departures inner join flight on dep_flight_no= fl_flight_no
+)on air_code= fl_orig
+where fl_meal= 'S' or fl_meal is null
+
+#3
+select pil_pilotname, pil_flight_pay, Average_State_Pay from pilots inner join (
+select  pil_state as PS, avg(pil_flight_pay) as Average_State_Pay from pilots
+group by pil_state) on PS= PILOTS.PIL_STATE
+where pil_flight_pay> Average_State_Pay
+
+#4
+select distinct dep_flight_no, dep_equip_no from departures inner join (airport inner join flight on fl_orig= air_code)
+on dep_flight_no= fl_flight_no
+where air_elevation > (
+select max(air_elevation)-0.01 from airport
+) or air_elevation< (
+select min(air_elevation)+0.01 from airport
+)
+
+#5
+select fl_flight_no, fl_orig, fl_dest, fl_orig_time, fl_dest_time, fl_meal, fl_fare, fl_distance, fl_time_zones from flight
+inner join (
+select air_code from airport
+where substr(air_location,-2,2)='CA'
+) on fl_orig= air_code
+union
+select fl_flight_no, fl_orig, fl_dest, fl_orig_time, fl_dest_time, fl_meal, fl_fare, fl_distance, fl_time_zones from flight
+inner join (
+select air_code from airport
+where substr(air_location,-2,2)='CA'
+) on fl_dest= air_code
+
+#6
+select tic_itinerary_no, tic_flight_no, tic_flight_date, tic_seat, pas_name, pas_itinerary_no, pas_fare, pas_confirm_no
+from ticket inner join passenger on pas_itinerary_no= tic_itinerary_no
+where tic_itinerary_no in(
+select tic_itinerary_no from ticket
+group by tic_itinerary_no
+having count(tic_flight_no)= 1
+)
+
+#7
+select res_name, pas_name, SUBSTR(RES_PHONE,1,3)||'-'||SUBSTR(RES_PHONE,4,3)||'-'||SUBSTR(RES_PHONE,7,4) AS Phone_Number, pas_itinerary_no
+from passenger inner join (reservation inner join flight on fl_flight_no= res_flight_no) on pas_confirm_no = res_confirm_no
+where res_flight_date='17-MAY-17' and fl_orig= 'PHX'
+
+#8
+
+#9
+select DISTINCT p1.pil_pilotname as Pilots from(
+select pilots.PIL_pilotname, departures.DEP_EQUIP_NO + departures.DEP_DEP_DATE as uni
+from pilots inner join departures on pilots.PIL_PILOT_ID=departures.DEP_PILOT_ID) p1 inner join
+(select pilots.PIL_pilotname, departures.DEP_EQUIP_NO + departures.DEP_DEP_DATE as uni
+from pilots inner join departures on pilots.PIL_PILOT_ID=departures.DEP_PILOT_ID) p2 on p1.PIL_pilotname=p2.PIL_pilotname
+where p1.uni!= p2.uni
+order by Pilots;
+
+#10
+select States, sum(CC) from(
+select substr(air_location,-2,2) as States, count(air_code) as CC from airport
+group by air_location
+)
+group by States
+
+#11
+select * from(
+select pil_pilotname, pil_flight_pay, (sysdate - PIL_BRTHDATE)/365 as age from pilots
+where pil_flight_pay =( 
+select max(pil_flight_pay) from pilots
+) 
+)
+where age<50
+
+#12
+select distinct dep_equip_no, eq_equip_type from equip_type inner join (
+departures inner join (flight inner join airport on air_code= fl_orig or air_code= fl_dest)on fl_flight_no = dep_flight_no
+) on dep_equip_no= eq_equip_no
+where air_location=(
+select max(air_location) from airport
+) or 
+air_location=(
+select min(air_location) from airport
+)
+
+#13
+select * from (
+select distinct pil_pilotname, substr(pil_pilotname,1,instr(pil_pilotname,'.')-2) as Required_Output from pilots
+inner join departures on dep_pilot_id = pil_pilot_id
+where dep_dep_date like'%MAY-17'
+union
+select distinct pil_pilotname, pil_pilotname as required_output from pilots
+where pil_pilotname like'%t'
+)
+where required_output is not null
+
+#14
+select * from(
+select fl_flight_no, 'Phonex, AZ' as Air_Location1, 'Los Angeles,CA' as Air_Location2,FL_ORIG_TIME, to_char(FL_ORIG_TIME,'yyyy-mm-dd hh24:mi:ss')
+as Depar, to_char(fl_dest_time,'yyyy-mm-dd hh24:mi:ss') as Arriv from flight
+where FL_ORIG ='PHX' and FL_DEST='LAX' 
+)
+where Depar like'%22%'
+
+#15
+select fl_flight_no, fl_orig, fl_dest, to_char(fl_orig_time,'yyyy-mm-dd hh24:mi:ss') as Departure_Time, to_char(fl_dest_time,'yyyy-mm-dd hh24:mi:ss') as Arrival_Time
+from flight
+order by FL_FLIGHT_NO
+
